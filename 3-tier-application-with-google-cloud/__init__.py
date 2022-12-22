@@ -11,15 +11,15 @@ with open('config.json','r') as c:
 local_server = True
 db = SQLAlchemy()
 
-app = Flask(__name__,static_fold='static',template_folder='template')
+app = Flask(__name__,template_folder='template')
 if(local_server==True):
-    # app.config['SQLALCHEMY_DATABASE_URI'] = params["dev_uri"]
-    # app.config['SQLALCHEMY_DATABASE_URI'] = "mysql+mysqldb://Sarthak:"+params["PASSWORD"]+"@"+params["PUBLIC_IP_ADDRESS"]+"/"+params["DBNAME"]+"?unix_socket=/cloudsql/PROJECT_ID:"+params["PROJECT_ID"]+":"+params["INSTANCE_NAME"]
-    app.config["SQLALCHEMY_DATABASE_URI"]= "mysql+mysqldb://Sarthak:12345@35.184.174.195:3306/codingthunder?unix_socket=/cloudsql/qwiklabs-gcp-00-cf60061fc83c:us-central1:codingthunder"
+    #Replace the ip_address and cloud instance and db name accordingly.
+    app.config["SQLALCHEMY_DATABASE_URI"]= "mysql+mysqldb://username:password@sql_instace_IP:3306/SQL_instancename?unix_socket=/cloudsql/projectid:us-central1:codingthunder"
 
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"]=True
 else:
     app.config['SQLALCHEMY_DATABASE_URI'] = params["prod_uri"]
+
 db.init_app(app)
 
 
@@ -38,7 +38,12 @@ class Posts(db.Model):
     content= db.Column(db.String(120), nullable=False)
     date = db.Column(db.DateTime)
 
-db.create_all()
+# Set up models
+
+def create_table():
+    with app.app_context():
+        # Create the table in the database
+        db.create_all()
 
 @app.route("/")
 def home():
@@ -68,6 +73,9 @@ def post_route(post_slug):
     post = Posts.query.filter_by(slug=post_slug).first()
     return render_template('post.html',params=params,post=post)
     
+#After first insertion , comment out the below line
+create_table()
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=80, debug=True, threaded=True)
+
